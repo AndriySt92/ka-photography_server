@@ -4,6 +4,7 @@ import express from "express";
 
 import connectDB from "./config/connectDb";
 import { errorHandler } from "./middlewares";
+import { PhotoRoutes } from "./routes";
 import { CustomError } from "./utils";
 
 const app = express();
@@ -18,6 +19,8 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+
+app.use("/api/photos", PhotoRoutes);
 
 app.all("*", (req, _res, next): void => {
   const error = new CustomError(`Route ${req.originalUrl} not found`, 404);
