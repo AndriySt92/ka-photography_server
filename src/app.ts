@@ -4,7 +4,7 @@ import express from "express";
 
 import connectDB from "./config/connectDb";
 import { errorHandler } from "./middlewares";
-import { AdminRoutes, PhotoRoutes } from "./routes";
+import { AdminRoutes, BookingRoutes, PhotoRoutes } from "./routes";
 import { CustomError } from "./utils";
 
 const app = express();
@@ -22,6 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/admin", AdminRoutes);
 app.use("/api/photos", PhotoRoutes);
+app.use("/api/bookings", BookingRoutes);
 
 app.all("*", (req, _res, next): void => {
   const error = new CustomError(`Route ${req.originalUrl} not found`, 404);
