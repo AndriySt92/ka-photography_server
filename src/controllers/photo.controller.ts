@@ -22,8 +22,8 @@ const addPhoto = async (req: Request, res: Response): Promise<void> => {
   res.status(201).json({ status: "success", message: "Photos added" });
 };
 
-const getPhotosByCategory = async (req: Request, res: Response): Promise<void> => {
-  const category = req.query.category;
+const getPhotos = async (req: Request, res: Response): Promise<void> => {
+  const category = (req.query.category as string) || undefined;
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 12;
 
@@ -49,6 +49,6 @@ const deletePhoto = async (req: Request, res: Response): Promise<void> => {
 
 export default {
   addPhoto,
-  getPhotosByCategory,
+  getPhotos,
   deletePhoto,
 };
