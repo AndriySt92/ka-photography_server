@@ -19,11 +19,11 @@ const addPhoto = async (req: Request, res: Response): Promise<void> => {
 
   await PhotoService.addPhoto(categories, photos);
 
-  res.status(201).json({ status: "success", message: "Photos added" });
+  res.status(201).json({ status: "success", message: "Фото додано успішно" });
 };
 
-const getPhotosByCategory = async (req: Request, res: Response): Promise<void> => {
-  const category = req.query.category;
+const getPhotos = async (req: Request, res: Response): Promise<void> => {
+  const category = (req.query.category as string) || undefined;
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 12;
 
@@ -44,11 +44,11 @@ const deletePhoto = async (req: Request, res: Response): Promise<void> => {
 
   await PhotoService.deletePhoto(photoId);
 
-  res.json({ status: "success", message: "Photo deleted" });
+  res.json({ status: "success", message: "Фото видалено успішно" });
 };
 
 export default {
   addPhoto,
-  getPhotosByCategory,
+  getPhotos,
   deletePhoto,
 };

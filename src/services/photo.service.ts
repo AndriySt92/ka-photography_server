@@ -16,12 +16,11 @@ const getPhotos = async (category, pageOptions: { page: number; limit: number })
   const limit = pageOptions.limit;
   const skip = (page - 1) * limit;
 
+  const query = category && category !== "" ? { categories: { $in: [category] } } : {};
+
   const [photos, total] = await Promise.all([
-    Photos.find({ categories: { $in: [category] } })
-      .sort("-createdAt")
-      .skip(skip)
-      .limit(limit),
-    Photos.countDocuments({ categories: { $in: [category] } }),
+    Photos.find(query).sort("-createdAt").skip(skip).limit(limit),
+    Photos.countDocuments(query),
   ]);
 
   const totalPages = Math.ceil(total / limit);

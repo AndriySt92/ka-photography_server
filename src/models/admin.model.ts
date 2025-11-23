@@ -7,20 +7,20 @@ const adminSchema = new mongoose.Schema({
   username: {
     type: String,
     required: true,
-    minlength: [3, "Name must be at least 3 characters"],
-    maxlength: [100, "Name must be at least 100 characters"],
+    minlength: [3, "Ім'я повинно містити щонайменше 3 символи"],
+    maxlength: [100, "Ім'я повинно містити не більше 100 символів"],
     unique: true,
   },
   email: {
     type: String,
-    required: [true, "Email is required"],
+    required: [true, "Електронна пошта обов'язкова"],
     unique: true,
-    match: [/^\S+@\S+\.\S+$/, "Invalid email format"],
+    match: [/^\S+@\S+\.\S+$/, "Невірний формат електронної пошти"],
   },
   password: {
     type: String,
-    required: [true, "Password is required"],
-    minlength: [6, "Password must be at least 6 characters"],
+    required: [true, "Пароль обов'язковий"],
+    minlength: [6, "Пароль повинен містити щонайменше 6 символів"],
   },
   role: {
     type: String,

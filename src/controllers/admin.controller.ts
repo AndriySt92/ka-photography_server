@@ -12,7 +12,7 @@ const login = async (req: Request, res: Response): Promise<void> => {
 
 const logout = (_req: Request, res: Response): void => {
   res.cookie("auth_token", "", { maxAge: 0 });
-  res.status(200).json({ status: "success", message: "Logged out successfully" });
+  res.status(200).json({ status: "success", message: "Вихід успішний" });
 };
 
 export const current = async (req: Request, res: Response) => {
