@@ -1,12 +1,16 @@
 import cloudinary from "../config/cloudinary";
+import { PhotoUploadDto } from "../dto";
 import Photos from "../models/photo.model";
-import { CustomError, uploadImage } from "../utils";
+import { CustomError } from "../utils";
 
-const addPhoto = async (categories: string[], photoFiles: Express.Multer.File[]) => {
+const addPhoto = async (categories: string[], photos: PhotoUploadDto[]) => {
   await Promise.all(
-    photoFiles.map(async (photoFile) => {
-      const photoUrl = await uploadImage(photoFile);
-      await Photos.create({ categories, photoUrl });
+    photos.map(async (photo: { url: string; publicId: string }) => {
+      await Photos.create({
+        categories,
+        photoUrl: photo.url,
+        publicId: photo.publicId,
+      });
     }),
   );
 };
@@ -43,11 +47,8 @@ const deletePhoto = async (photoId: string) => {
 
   if (!photo) throw new CustomError("Фото не знайдено", 404);
 
-  // Delete image from Cloudinary
-  const publicId = `photos/${photo.photoUrl.split("/").pop()?.split(".")[0]}`;
-
-  if (publicId) {
-    await cloudinary.uploader.destroy(publicId);
+  if (photo.publicId) {
+    await cloudinary.uploader.destroy(photo.publicId);
   }
 
   await photo.deleteOne();

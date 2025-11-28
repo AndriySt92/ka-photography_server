@@ -4,4 +4,3 @@ export { default as generateTokenAndSetCookie } from "./generateTokenAndSetCooki
 export { default as getErrorResponse } from "./getErrorResponse";
 export { default as rateLimiter } from "./rateLimiter";
 export { default as sendEmail } from "./sendEmail";
-export { default as uploadImage } from "./uploadImage";
