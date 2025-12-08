@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 
 import AdminService from "../services/admin.service";
+import { getCookieOptions } from "../utils";
 
 const login = async (req: Request, res: Response): Promise<void> => {
   const loginData = req.body;
@@ -11,7 +12,11 @@ const login = async (req: Request, res: Response): Promise<void> => {
 };
 
 const logout = (_req: Request, res: Response): void => {
-  res.cookie("auth_token", "", { maxAge: 0 });
+  const isProduction = process.env.NODE_ENV === "production";
+
+  const cookieOptions = getCookieOptions(isProduction);
+  res.clearCookie("auth_token", cookieOptions);
+
   res.status(200).json({ status: "success", message: "Вихід успішний" });
 };
 
