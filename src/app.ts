@@ -3,6 +3,7 @@ import cors from "cors";
 import express from "express";
 
 import { connectDB, getCorsOptions } from "./config";
+import { HTTP_STATUS } from "./constants";
 import { errorHandler } from "./middlewares";
 import { AdminRoutes, BookingRoutes, PhotoRoutes } from "./routes";
 import { CustomError } from "./utils";
@@ -20,7 +21,7 @@ app.use("/api/photos", PhotoRoutes);
 app.use("/api/bookings", BookingRoutes);
 
 app.all("*", (req, _res, next): void => {
-  const error = new CustomError(`Route ${req.originalUrl} not found`, 404);
+  const error = new CustomError(`Route ${req.originalUrl} not found`, HTTP_STATUS.NOT_FOUND);
   next(error);
 });
 

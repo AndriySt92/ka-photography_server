@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 
+import { HTTP_STATUS } from "../constants";
 import AdminService from "../services/admin.service";
 import { getCookieOptions } from "../utils";
 
@@ -17,7 +18,7 @@ const logout = (_req: Request, res: Response): void => {
   const cookieOptions = getCookieOptions(isProduction);
   res.clearCookie("auth_token", cookieOptions);
 
-  res.status(200).json({ status: "success", message: "Вихід успішний" });
+  res.status(HTTP_STATUS.OK).json({ status: "success", message: "Вихід успішний" });
 };
 
 export const current = async (req: Request, res: Response) => {

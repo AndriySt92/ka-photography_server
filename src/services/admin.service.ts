@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { Response } from "express";
 
+import { HTTP_STATUS } from "../constants";
 import { LoginData } from "../dto";
 import Admin from "../models/admin.model";
 import type { Admin as AdminType } from "../types";
@@ -10,13 +11,13 @@ const login = async (loginData: LoginData, res: Response): Promise<AdminType> =>
   const user = await Admin.findOne({ email: loginData.email });
 
   if (!user) {
-    throw new CustomError("Неправильний пароль або логін", 400);
+    throw new CustomError("Неправильний пароль або логін", HTTP_STATUS.BAD_REQUEST);
   }
 
   const isPasswordCorrect = await bcrypt.compare(loginData.password, user.password);
 
   if (!isPasswordCorrect) {
-    throw new CustomError("Неправильний пароль або логін", 400);
+    throw new CustomError("Неправильний пароль або логін", HTTP_STATUS.BAD_REQUEST);
   }
 
   generateTokenAndSetCookie({ userId: user._id, res });

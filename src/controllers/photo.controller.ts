@@ -1,18 +1,22 @@
 import { Request, Response } from "express";
 
+import { HTTP_STATUS } from "../constants";
 import { AddPhotoRequestDto } from "../dto";
 import PhotoService from "../services/photo.service";
 import { CustomError } from "../utils";
+
+const PAGE = 1;
+const LIMIT = 12;
 
 const addPhoto = async (req: Request, res: Response): Promise<void> => {
   const { categories, photos }: AddPhotoRequestDto = req.body;
 
   if (!photos || photos.length === 0) {
-    throw new CustomError("Принаймні одне фото обов'язкове", 400);
+    throw new CustomError("Принаймні одне фото обов'язкове", HTTP_STATUS.BAD_REQUEST);
   }
 
   if (!Array.isArray(categories) || categories.length === 0) {
-    throw new CustomError("Категорії обов'язкові", 400);
+    throw new CustomError("Категорії обов'язкові", HTTP_STATUS.BAD_REQUEST);
   }
 
   // Validate Cloudinary URLs and extract data
@@ -25,12 +29,12 @@ const addPhoto = async (req: Request, res: Response): Promise<void> => {
   );
 
   if (validPhotos.length === 0) {
-    throw new CustomError("Невалідні фото дані", 400);
+    throw new CustomError("Невалідні фото дані", HTTP_STATUS.BAD_REQUEST);
   }
 
   await PhotoService.addPhoto(categories, validPhotos);
 
-  res.status(201).json({
+  res.status(HTTP_STATUS.CREATED).json({
     status: "success",
     message: `Фото додано успішно (${validPhotos.length} з ${photos.length})`,
   });
@@ -38,8 +42,8 @@ const addPhoto = async (req: Request, res: Response): Promise<void> => {
 
 const getPhotos = async (req: Request, res: Response): Promise<void> => {
   const category = (req.query.category as string) || undefined;
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 12;
+  const page = parseInt(req.query.page as string) || PAGE;
+  const limit = parseInt(req.query.limit as string) || LIMIT;
 
   const { photos, pagination } = await PhotoService.getPhotos(category, {
     page,

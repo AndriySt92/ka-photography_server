@@ -1,4 +1,5 @@
 import cloudinary from "../config/cloudinary";
+import { HTTP_STATUS } from "../constants";
 import { PhotoUploadDto } from "../dto";
 import Photos from "../models/photo.model";
 import { CustomError } from "../utils";
@@ -45,7 +46,7 @@ const getPhotos = async (category, pageOptions: { page: number; limit: number })
 const deletePhoto = async (photoId: string) => {
   const photo = await Photos.findById(photoId);
 
-  if (!photo) throw new CustomError("Фото не знайдено", 404);
+  if (!photo) throw new CustomError("Фото не знайдено", HTTP_STATUS.NOT_FOUND);
 
   if (photo.publicId) {
     await cloudinary.uploader.destroy(photo.publicId);

@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { z } from "zod";
 
+import { HTTP_STATUS } from "../constants";
 import { CustomError } from "../utils";
 
 // Validation constants
@@ -69,7 +70,7 @@ export const validateBooking = (req: Request, _res: Response, next: NextFunction
   } catch (err) {
     if (err instanceof z.ZodError) {
       const errorMessages = err.errors.map((e) => e.message).join(". ");
-      throw new CustomError(errorMessages, 400);
+      throw new CustomError(errorMessages, HTTP_STATUS.BAD_REQUEST);
     }
     throw err;
   }
