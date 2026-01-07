@@ -1,12 +1,15 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import dotenv from "dotenv";
 import express from "express";
 
-import { connectDB, getCorsOptions } from "./config";
+import { getCorsOptions } from "./config";
 import { HTTP_STATUS } from "./constants";
 import { errorHandler } from "./middlewares";
 import { AdminRoutes, BookingRoutes, PhotoRoutes } from "./routes";
 import { CustomError } from "./utils";
+
+dotenv.config();
 
 const app = express();
 
@@ -26,8 +29,5 @@ app.all("*", (req, _res, next): void => {
 });
 
 app.use(errorHandler);
-
-// Database connection
-connectDB();
 
 export default app;
