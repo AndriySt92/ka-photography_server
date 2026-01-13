@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 
-import { HTTP_STATUS } from "../../constants";
-import { validateBooking } from "../../middlewares/validateContactForm.middleware";
-import CustomError from "../../utils/customError";
+import { HTTP_STATUS } from "../../../constants";
+import { validateBooking } from "../../../middlewares/validateContactForm.middleware";
+import CustomError from "../../../utils/customError";
 
 describe("validateBooking Middleware", () => {
   let mockRequest: Partial<Request>;

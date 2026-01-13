@@ -1,7 +1,7 @@
-import BookingService from "../../services/booking.service";
-import { sendEmail } from "../../utils";
+import BookingService from "../../../services/booking.service";
+import { sendEmail } from "../../../utils";
 
-jest.mock("../../utils", () => ({
+jest.mock("../../../utils", () => ({
   sendEmail: jest.fn(),
   CustomError: jest.fn(),
 }));

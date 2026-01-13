@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 
-import { HTTP_STATUS } from "../../constants";
-import bookingController from "../../controllers/booking.controller";
-import BookingService from "../../services/booking.service";
+import { HTTP_STATUS } from "../../../constants";
+import bookingController from "../../../controllers/booking.controller";
+import BookingService from "../../../services/booking.service";
 
-jest.mock("../../services/booking.service");
+jest.mock("../../../services/booking.service");
 const MockBookingService = BookingService as jest.Mocked<typeof BookingService>;
 
 describe("Booking Controller", () => {
