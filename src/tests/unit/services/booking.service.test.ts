@@ -1,10 +1,13 @@
 import BookingService from "../../../services/booking.service";
+import { SessionType } from "../../../types";
 import { sendEmail } from "../../../utils";
+import { completeBookingData, requiredBookingData } from "../../fixtures/bookingData";
 
 jest.mock("../../../utils", () => ({
   sendEmail: jest.fn(),
-  CustomError: jest.fn(),
 }));
+
+const mockedSendEmail = sendEmail as jest.MockedFunction<typeof sendEmail>;
 
 describe("Booking Service", () => {
   beforeEach(() => {
@@ -16,41 +19,32 @@ describe("Booking Service", () => {
     delete process.env.ADMIN_EMAIL;
   });
 
-  const bookingData = {
-    name: "Joe Doe",
-    contact: "+380501234567",
-    sessionType: "individual" as const,
-    comment: "Some comment",
-    sessionDate: "2024-12-25 15:00",
-  };
+  it("should send email with correct parameters", async () => {
+    mockedSendEmail.mockResolvedValue(true);
 
-  it("should call sendEmail with correct parameters", async () => {
-    (sendEmail as jest.Mock).mockResolvedValue(true);
+    const result = await BookingService.createBooking(completeBookingData);
 
-    const result = await BookingService.createBooking(bookingData);
+    expect(mockedSendEmail).toHaveBeenCalledTimes(1);
 
-    expect(sendEmail).toHaveBeenCalledTimes(1);
-    expect(sendEmail).toHaveBeenCalledWith({
-      to: "test@example.com",
-      subject: "Новий запит на фотосесію від Joe Doe",
-      html: expect.stringContaining("Joe Doe"),
-    });
+    const emailCall = mockedSendEmail.mock.calls[0][0];
+    expect(emailCall.to).toBe("test@example.com");
+    expect(emailCall.subject).toBe(`Новий запит на фотосесію від ${completeBookingData.name}`);
+    expect(emailCall.html).toContain(completeBookingData.name);
+    expect(emailCall.html).toContain(completeBookingData.contact);
+    expect(emailCall.html).toContain(completeBookingData.comment);
+    expect(emailCall.html).toContain(completeBookingData.sessionDate);
 
     expect(result).toBe(true);
   });
 
-  it("should handle missing optional fields", async () => {
-    (sendEmail as jest.Mock).mockResolvedValue(true);
-    const dataWithoutOptional = {
-      name: "Joe Doe",
-      contact: "+380501234567",
-      sessionType: "individual" as const,
-    };
+  it("should handle missing optional fields gracefully", async () => {
+    mockedSendEmail.mockResolvedValue(true);
 
-    const result = await BookingService.createBooking(dataWithoutOptional);
+    const result = await BookingService.createBooking(requiredBookingData);
 
     expect(result).toBe(true);
-    const html = (sendEmail as jest.Mock).mock.calls[0][0].html;
+
+    const html = mockedSendEmail.mock.calls[0][0].html;
     expect(html).not.toContain("❓ <b>Запитання:</b>");
     expect(html).not.toContain("⏰ <b>Бажаний час:</b>");
   });
@@ -64,19 +58,60 @@ describe("Booking Service", () => {
     ];
 
     for (const { input, expected } of testCases) {
-      // Reset for each iteration
-      (sendEmail as jest.Mock).mockClear();
-      (sendEmail as jest.Mock).mockResolvedValue(true);
+      mockedSendEmail.mockClear();
+      mockedSendEmail.mockResolvedValue(true);
 
       const data = {
-        ...bookingData,
-        sessionType: input as typeof bookingData.sessionType,
+        ...requiredBookingData,
+        sessionType: input as SessionType,
       };
 
       await BookingService.createBooking(data);
 
-      const html = (sendEmail as jest.Mock).mock.calls[0][0].html;
+      const html = mockedSendEmail.mock.calls[0][0].html;
       expect(html).toContain(expected);
     }
+  });
+
+  it("should handle unknown session type by using original value", async () => {
+    mockedSendEmail.mockResolvedValue(true);
+
+    const data = {
+      ...requiredBookingData,
+      sessionType: "unknown-type" as SessionType,
+    };
+
+    await BookingService.createBooking(data);
+
+    const html = mockedSendEmail.mock.calls[0][0].html;
+    expect(html).toContain("unknown-type");
+  });
+
+  it("should return false when email sending fails", async () => {
+    mockedSendEmail.mockResolvedValue(false);
+
+    const result = await BookingService.createBooking(completeBookingData);
+
+    expect(result).toBe(false);
+  });
+
+  it("should handle email sending error gracefully", async () => {
+    mockedSendEmail.mockRejectedValue(new Error("SMTP error"));
+
+    await expect(BookingService.createBooking(completeBookingData)).rejects.toThrow("SMTP error");
+  });
+
+  it("should include current date in email", async () => {
+    const mockDate = new Date("2024-01-15T12:00:00");
+    jest.spyOn(global, "Date").mockImplementation(() => mockDate as Date);
+
+    mockedSendEmail.mockResolvedValue(true);
+
+    await BookingService.createBooking(completeBookingData);
+
+    const html = mockedSendEmail.mock.calls[0][0].html;
+    expect(html).toContain("15.01.2024");
+
+    jest.restoreAllMocks();
   });
 });

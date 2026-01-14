@@ -3,6 +3,7 @@ import request from "supertest";
 import app from "../../app";
 import { HTTP_STATUS } from "../../constants";
 import BookingService from "../../services/booking.service";
+import { requiredBookingData } from "../fixtures/bookingData";
 
 jest.mock("../../utils/sendEmail", () => ({
   sendEmail: jest.fn().mockResolvedValue(true),
@@ -18,15 +19,9 @@ beforeEach(() => {
 
 describe("POST /api/bookings", () => {
   it("should create a booking successfully", async () => {
-    const payload = {
-      name: "Joe Doe",
-      contact: "+380501234567",
-      sessionType: "individual",
-    };
-
     const response = await request(app)
       .post("/api/bookings")
-      .send(payload)
+      .send(requiredBookingData)
       .expect(HTTP_STATUS.CREATED);
 
     expect(response.body).toEqual({
@@ -36,15 +31,14 @@ describe("POST /api/bookings", () => {
   });
 
   it("should return 400 for invalid data, invalid contact", async () => {
-    const payload = {
-      name: "Joe Doe",
+    const invalidPayload = {
+      ...requiredBookingData,
       contact: "+38050123456", // Invalid contact
-      sessionType: "individual",
     };
 
     const response = await request(app)
       .post("/api/bookings")
-      .send(payload)
+      .send(invalidPayload)
       .expect(HTTP_STATUS.BAD_REQUEST);
 
     expect(response.body).toHaveProperty("message");
@@ -55,9 +49,8 @@ describe("POST /api/bookings", () => {
 
   it("should return 400 for invalid data, invalid name", async () => {
     const invalidPayload = {
+      ...requiredBookingData,
       name: "I", // Too short
-      contact: "+380501234567",
-      sessionType: "individual",
     };
 
     const response = await request(app)
@@ -72,15 +65,9 @@ describe("POST /api/bookings", () => {
   it("should return 500 when service fails", async () => {
     jest.mocked(BookingService.createBooking).mockResolvedValueOnce(false);
 
-    const payload = {
-      name: "Іван Іваненко",
-      contact: "+380501234567",
-      sessionType: "individual",
-    };
-
     const response = await request(app)
       .post("/api/bookings")
-      .send(payload)
+      .send(requiredBookingData)
       .expect(HTTP_STATUS.INTERNAL_SERVER_ERROR);
 
     expect(response.body).toHaveProperty("message");
