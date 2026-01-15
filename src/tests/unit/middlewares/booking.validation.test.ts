@@ -1,64 +1,47 @@
-import { NextFunction, Request, Response } from "express";
-
 import { HTTP_STATUS } from "../../../constants";
 import { validateBooking } from "../../../middlewares/validateContactForm.middleware";
 import CustomError from "../../../utils/customError";
+import { completeBookingData, requiredBookingData } from "../../fixtures/bookingData";
+import { setupMiddlewareTest } from "../../utils/expressMock";
 
 describe("validateBooking Middleware", () => {
-  let mockRequest: Partial<Request>;
-  let mockResponse: Partial<Response>;
-  let mockNext: jest.Mock<NextFunction>;
-
-  beforeEach(() => {
-    mockRequest = {
-      body: {},
-    };
-    mockResponse = {};
-    mockNext = jest.fn();
-  });
+  beforeEach(() => {});
 
   it("should call next() for valid booking data with all fields", () => {
-    mockRequest.body = {
-      name: "Doe joe",
-      contact: "+380501234567",
-      sessionType: "individual",
-      comment: "Хотів би дізнатися деталі зйомки",
-      sessionDate: "2024-12-25 15:00",
-    };
+    const { req, res, next } = setupMiddlewareTest({
+      reqBody: completeBookingData,
+    });
 
-    validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
+    validateBooking(req, res, next);
 
-    expect(mockNext).toHaveBeenCalled();
-    expect(mockNext).toHaveBeenCalledWith(); // No arguments means no error
+    expect(next).toHaveBeenCalled();
+    expect(next).toHaveBeenCalledWith(); // No arguments means no error
   });
 
   it("should call next() for valid booking data with minimum required fields", () => {
-    mockRequest.body = {
-      name: "Doe",
-      contact: "@instagram_user",
-      sessionType: "group",
-      // comment and sessionDate are optional
-    };
+    const { req, res, next } = setupMiddlewareTest({
+      reqBody: requiredBookingData,
+    });
 
-    validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
+    validateBooking(req, res, next);
 
-    expect(mockNext).toHaveBeenCalled();
-    expect(mockNext).toHaveBeenCalledWith();
+    expect(next).toHaveBeenCalled();
+    expect(next).toHaveBeenCalledWith();
   });
 
   it("should accept empty strings for optional fields", () => {
-    mockRequest.body = {
-      name: "Doe Joe",
-      contact: "+380501234567",
-      sessionType: "express",
-      comment: "", // Empty string
-      sessionDate: "", // Empty string
-    };
+    const { req, res, next } = setupMiddlewareTest({
+      reqBody: {
+        ...requiredBookingData,
+        comment: "", // Empty string
+        sessionDate: "", // Empty string
+      },
+    });
 
-    validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
+    validateBooking(req, res, next);
 
-    expect(mockNext).toHaveBeenCalled();
-    expect(mockNext).toHaveBeenCalledWith();
+    expect(next).toHaveBeenCalled();
+    expect(next).toHaveBeenCalledWith();
   });
 
   it("should accept Ukrainian letters and special characters in name", () => {
@@ -73,33 +56,35 @@ describe("validateBooking Middleware", () => {
     ];
 
     validNames.forEach((name) => {
-      mockNext.mockClear();
+      const { req, res, next } = setupMiddlewareTest({
+        reqBody: {
+          ...requiredBookingData,
+          name,
+        },
+      });
 
-      mockRequest.body = {
-        name,
-        contact: "+380501234567",
-        sessionType: "individual",
-      };
+      next.mockClear();
 
-      validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
+      validateBooking(req, res, next);
 
-      expect(mockNext).toHaveBeenCalled();
+      expect(next).toHaveBeenCalled();
     });
   });
 
   it("should throw CustomError for name that is too short", () => {
-    mockRequest.body = {
-      name: "І",
-      contact: "+380501234567",
-      sessionType: "individual",
-    };
+    const { req, res, next } = setupMiddlewareTest({
+      reqBody: {
+        ...requiredBookingData,
+        name: "І",
+      },
+    });
 
     expect(() => {
-      validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
+      validateBooking(req, res, next);
     }).toThrow(CustomError);
 
     expect(() => {
-      validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
+      validateBooking(req, res, next);
     }).toThrow(
       expect.objectContaining({
         message: "Ім'я має містити щонайменше 2 символи",
@@ -107,23 +92,25 @@ describe("validateBooking Middleware", () => {
       }),
     );
 
-    expect(mockNext).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
   });
 
   it("should throw CustomError for name that is too long", () => {
     const longName = "І".repeat(71); // 71 characters, max is 70
-    mockRequest.body = {
-      name: longName,
-      contact: "+380501234567",
-      sessionType: "individual",
-    };
+
+    const { req, res, next } = setupMiddlewareTest({
+      reqBody: {
+        ...requiredBookingData,
+        name: longName,
+      },
+    });
 
     expect(() => {
-      validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
+      validateBooking(req, res, next);
     }).toThrow(CustomError);
 
     expect(() => {
-      validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
+      validateBooking(req, res, next);
     }).toThrow(
       expect.objectContaining({
         message: "Ім'я не може перевищувати 70 символів",
@@ -131,27 +118,21 @@ describe("validateBooking Middleware", () => {
       }),
     );
 
-    expect(mockNext).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
   });
 
   it("should throw CustomError for name with invalid characters", () => {
     const invalidNames = ["John123", "Іван!", "Anna@Smith", "Test_User"];
 
     invalidNames.forEach((name) => {
-      mockNext.mockClear();
-
-      mockRequest.body = {
-        name,
-        contact: "+380501234567",
-        sessionType: "individual",
-      };
+      const { req, res, next } = setupMiddlewareTest({ reqBody: { ...requiredBookingData, name } });
 
       expect(() => {
-        validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
+        validateBooking(req, res, next);
       }).toThrow(CustomError);
 
       expect(() => {
-        validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
+        validateBooking(req, res, next);
       }).toThrow(
         expect.objectContaining({
           message: expect.stringContaining("Ім'я може містити лише літери"),
@@ -159,7 +140,7 @@ describe("validateBooking Middleware", () => {
         }),
       );
 
-      expect(mockNext).not.toHaveBeenCalled();
+      expect(next).not.toHaveBeenCalled();
     });
   });
 
@@ -174,17 +155,13 @@ describe("validateBooking Middleware", () => {
     ];
 
     validPhones.forEach((phone) => {
-      mockNext.mockClear();
+      const { req, res, next } = setupMiddlewareTest({
+        reqBody: { ...requiredBookingData, contact: phone },
+      });
 
-      mockRequest.body = {
-        name: "Іван Іваненко",
-        contact: phone,
-        sessionType: "individual",
-      };
+      validateBooking(req, res, next);
 
-      validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
-
-      expect(mockNext).toHaveBeenCalled();
+      expect(next).toHaveBeenCalled();
     });
   });
 
@@ -200,44 +177,45 @@ describe("validateBooking Middleware", () => {
     ];
 
     validInstagramHandles.forEach((contact) => {
-      mockNext.mockClear();
+      const { req, res, next } = setupMiddlewareTest({
+        reqBody: {
+          ...requiredBookingData,
+          contact,
+        },
+      });
 
-      mockRequest.body = {
-        name: "Іван Іваненко",
-        contact,
-        sessionType: "individual",
-      };
+      validateBooking(req, res, next);
 
-      validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
-
-      expect(mockNext).toHaveBeenCalled();
+      expect(next).toHaveBeenCalled();
     });
   });
 
   it("should throw CustomError for invalid contact format", () => {
     const invalidContacts = [
-      "12", // Too short (2 chars)
-      "abc", // Not phone or Instagram format
+      "a", // Too short for Instagram
       "email@example.com", // Not Instagram (has @ in the middle)
       "+38050", // Too short for phone
-      "38050123", // Too short for phone
-      "050123", // Too short for phone
       "+123456789012", // Not Ukrainian
       "username@", // Instagram can't end with @
-      "@.com", // Invalid Instagram characters
+      "@.com", // Invalid Instagram characters (starts with dot)
       "@a b", // Space in Instagram
+      "user..name", // Consecutive dots
+      "user.", // Ends with dot
     ];
 
     invalidContacts.forEach((contact) => {
-      mockNext.mockClear();
+      const { req, res, next } = setupMiddlewareTest({
+        reqBody: {
+          ...completeBookingData,
+          contact,
+        },
+      });
 
-      mockRequest.body = {
-        name: "Іван Іваненко",
-        contact,
-        sessionType: "individual",
-      };
+      expect(() => {
+        validateBooking(req, res, next);
+      }).toThrow(CustomError);
 
-      expect(mockNext).not.toHaveBeenCalled();
+      expect(next).not.toHaveBeenCalled();
     });
   });
 
@@ -245,57 +223,56 @@ describe("validateBooking Middleware", () => {
     const sessionTypes = ["individual", "group", "express", "love-story"];
 
     sessionTypes.forEach((sessionType) => {
-      mockNext.mockClear();
+      const { req, res, next } = setupMiddlewareTest({
+        reqBody: {
+          ...requiredBookingData,
+          sessionType,
+        },
+      });
 
-      mockRequest.body = {
-        name: "Іван Іваненко",
-        contact: "+380501234567",
-        sessionType,
-      };
+      validateBooking(req, res, next);
 
-      validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
-
-      expect(mockNext).toHaveBeenCalled();
+      expect(next).toHaveBeenCalled();
     });
   });
 
   it("should throw CustomError for invalid session type", () => {
-    mockRequest.body = {
-      name: "Іван Іваненко",
-      contact: "+380501234567",
-      sessionType: "invalid-type",
-    };
-
+    const { req, res, next } = setupMiddlewareTest({
+      reqBody: {
+        ...requiredBookingData,
+        sessionType: "invalid-type",
+      },
+    });
     expect(() => {
-      validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
+      validateBooking(req, res, next);
     }).toThrow(CustomError);
     expect(() => {
-      validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
+      validateBooking(req, res, next);
     }).toThrow(
       expect.objectContaining({
         message: "Тип фотосесії має бути одним з: individual, group, express, love-story",
-        status: 400,
+        status: HTTP_STATUS.BAD_REQUEST,
       }),
     );
 
-    expect(mockNext).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
   });
 
   it("should throw CustomError for comment exceeding max length", () => {
     const longComment = "a".repeat(501); // 501 characters, max is 500
-    mockRequest.body = {
-      name: "Іван Іваненко",
-      contact: "+380501234567",
-      sessionType: "individual",
-      comment: longComment,
-    };
+    const { req, res, next } = setupMiddlewareTest({
+      reqBody: {
+        ...requiredBookingData,
+        comment: longComment,
+      },
+    });
 
     expect(() => {
-      validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
+      validateBooking(req, res, next);
     }).toThrow(CustomError);
 
     expect(() => {
-      validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
+      validateBooking(req, res, next);
     }).toThrow(
       expect.objectContaining({
         message: "Запитання не може перевищувати 500 символів",
@@ -303,24 +280,24 @@ describe("validateBooking Middleware", () => {
       }),
     );
 
-    expect(mockNext).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
   });
 
   it("should throw CustomError for sessionDate exceeding max length", () => {
     const longDate = "a".repeat(101); // 101 characters, max is 100
-    mockRequest.body = {
-      name: "Іван Іваненко",
-      contact: "+380501234567",
-      sessionType: "individual",
-      sessionDate: longDate,
-    };
+    const { req, res, next } = setupMiddlewareTest({
+      reqBody: {
+        ...completeBookingData,
+        sessionDate: longDate,
+      },
+    });
 
     expect(() => {
-      validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
+      validateBooking(req, res, next);
     }).toThrow(CustomError);
 
     expect(() => {
-      validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
+      validateBooking(req, res, next);
     }).toThrow(
       expect.objectContaining({
         message: "Дата не може перевищувати 100 символів",
@@ -328,7 +305,7 @@ describe("validateBooking Middleware", () => {
       }),
     );
 
-    expect(mockNext).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
   });
 
   it("should throw CustomError for missing required fields", () => {
@@ -339,29 +316,31 @@ describe("validateBooking Middleware", () => {
     ];
 
     testCases.forEach(({ body }) => {
-      mockNext.mockClear();
-
-      mockRequest.body = body;
+      const { req, res, next } = setupMiddlewareTest({
+        reqBody: body,
+      });
 
       expect(() => {
-        validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
+        validateBooking(req, res, next);
       }).toThrow(CustomError);
 
-      expect(mockNext).not.toHaveBeenCalled();
+      expect(next).not.toHaveBeenCalled();
     });
   });
 
   it("should trim whitespace from string fields", () => {
-    mockRequest.body = {
-      name: "  Іван Іваненко  ",
-      contact: "  +380501234567  ",
-      sessionType: "individual",
-      comment: "  Some comment with spaces  ",
-      sessionDate: "  2024-12-25  ",
-    };
+    const { req, res, next } = setupMiddlewareTest({
+      reqBody: {
+        name: "  Іван Іваненко  ",
+        contact: "  +380501234567  ",
+        sessionType: "individual",
+        comment: "  Some comment with spaces  ",
+        sessionDate: "  2024-12-25  ",
+      },
+    });
 
-    validateBooking(mockRequest as Request, mockResponse as Response, mockNext);
+    validateBooking(req, res, next);
 
-    expect(mockNext).toHaveBeenCalled();
+    expect(next).toHaveBeenCalled();
   });
 });
