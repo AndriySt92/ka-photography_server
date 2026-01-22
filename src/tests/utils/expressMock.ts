@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 
+import { TestAdmin } from "../fixtures";
+
 type AnyObject = Record<string, unknown>;
 type Params = Record<string, string>;
 type Query = Record<string, string | string[]>;
@@ -34,7 +36,7 @@ export interface ExpressTestSetupOptions {
   reqBody?: AnyObject;
   reqParams?: Params;
   reqQuery?: Query;
-  reqUser?: AnyObject | null;
+  reqUser?: TestAdmin | null;
   reqHeaders?: Headers;
   reqCookies?: Record<string, string>;
   reqFile?: Express.Multer.File;
