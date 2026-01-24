@@ -2,8 +2,9 @@ import mongoose from "mongoose";
 
 import { AddPhotoRequestDto } from "../../dto";
 import { PhotoCategory } from "../../types";
+import { IPhoto } from "../../types/photo.interface";
 
-export interface PhotoDocumentFixture {
+export interface PhotoDocumentFixture extends mongoose.Document, IPhoto {
   _id: mongoose.Types.ObjectId;
   categories: string[];
   photoUrl: string;
@@ -16,6 +17,15 @@ export interface PhotoUploadFixture {
     url: string;
     publicId: string;
   }>;
+}
+
+export interface PaginationFixture {
+  total: number;
+  totalPages: number;
+  currentPage: number;
+  itemsPerPage: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
 }
 
 export const categories: string[] = Object.values(PhotoCategory);
@@ -34,11 +44,24 @@ export const createPhotoUploadRequest = (
 });
 
 export const createPhotoDocument = (
-  overrides: Partial<PhotoDocumentFixture> = {},
-): PhotoDocumentFixture => ({
-  _id: new mongoose.Types.ObjectId(),
-  categories: [categories[0]],
-  photoUrl: "https://res.cloudinary.com/test-cloud/image/upload/test.jpg",
-  publicId: "test-public-id",
+  overrides: Partial<PhotoDocumentFixture> & { _id?: string | mongoose.Types.ObjectId } = {},
+): PhotoDocumentFixture =>
+  ({
+    _id: new mongoose.Types.ObjectId(),
+    categories: [categories[0]],
+    photoUrl: "https://res.cloudinary.com/test-cloud/image/upload/test.jpg",
+    publicId: "test-public-id",
+    ...overrides,
+  }) as PhotoDocumentFixture;
+
+export const createPaginationFixture = (
+  overrides: Partial<PaginationFixture> = {},
+): PaginationFixture => ({
+  total: 1,
+  totalPages: 1,
+  currentPage: 1,
+  itemsPerPage: 10,
+  hasNextPage: false,
+  hasPrevPage: false,
   ...overrides,
 });
