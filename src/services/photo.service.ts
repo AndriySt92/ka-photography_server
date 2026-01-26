@@ -1,8 +1,10 @@
+import mongoose from "mongoose";
+
 import cloudinary from "../config/cloudinary";
 import { HTTP_STATUS } from "../constants";
 import { PhotoUploadDto } from "../dto";
 import Photos from "../models/photo.model";
-import { CustomError } from "../utils";
+import { createPaginationResponse, CustomError } from "../utils";
 
 const addPhoto = async (categories: string[], photos: PhotoUploadDto[]) => {
   await Promise.all(
@@ -16,10 +18,8 @@ const addPhoto = async (categories: string[], photos: PhotoUploadDto[]) => {
   );
 };
 
-const getPhotos = async (category, pageOptions: { page: number; limit: number }) => {
-  const page = pageOptions.page;
-  const limit = pageOptions.limit;
-  const skip = (page - 1) * limit;
+const getPhotos = async (category, pageOptions: { page: number; limit: number; skip: number }) => {
+  const { limit, page, skip } = pageOptions;
 
   const query = category && category !== "" ? { categories: { $in: [category] } } : {};
 
@@ -28,22 +28,17 @@ const getPhotos = async (category, pageOptions: { page: number; limit: number })
     Photos.countDocuments(query),
   ]);
 
-  const totalPages = Math.ceil(total / limit);
-
   return {
     photos,
-    pagination: {
-      total,
-      totalPages,
-      currentPage: page,
-      itemsPerPage: limit,
-      hasNextPage: page < totalPages,
-      hasPrevPage: page > 1,
-    },
+    pagination: createPaginationResponse(total, page, limit),
   };
 };
 
 const deletePhoto = async (photoId: string) => {
+  if (!mongoose.Types.ObjectId.isValid(photoId)) {
+    throw new CustomError("Фото не знайдено", HTTP_STATUS.NOT_FOUND);
+  }
+
   const photo = await Photos.findById(photoId);
 
   if (!photo) throw new CustomError("Фото не знайдено", HTTP_STATUS.NOT_FOUND);
