@@ -3,33 +3,26 @@ import mongoose, { AnyObject } from "mongoose";
 import { HTTP_STATUS } from "../../../constants";
 import PhotoController from "../../../controllers/photo.controller";
 import PhotoService from "../../../services/photo.service";
-import { IPhoto } from "../../../types/photo.interface";
 import { CustomError } from "../../../utils";
 import {
   categories as photoCategories,
   createPaginationFixture,
   createPhotoDocument,
   createPhotoUploadRequest,
-  PhotoDocumentFixture,
 } from "../../fixtures/photo.fixture";
+import { setupPhotoTestEnvironment } from "../../setup";
 import { setupControllerTest } from "../../utils/expressMock";
 
 jest.mock("../../../services/photo.service");
 const MockPhotoService = PhotoService as jest.Mocked<typeof PhotoService>;
 
 describe("Photo Controller", () => {
-  const originalEnv = process.env;
+  beforeAll(() => {
+    setupPhotoTestEnvironment();
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env = {
-      ...originalEnv,
-      CLOUDINARY_CLOUD_NAME: "test-cloud",
-    };
-  });
-
-  afterEach(() => {
-    process.env = originalEnv;
   });
 
   describe("addPhoto", () => {
@@ -205,17 +198,17 @@ describe("Photo Controller", () => {
         createPhotoDocument(),
         createPhotoDocument({ _id: new mongoose.Types.ObjectId() }),
       ];
-      const mockPagination = createPaginationFixture();
+
+      const mockPagination = createPaginationFixture({
+        total: 2,
+      });
 
       const { req, res } = setupControllerTest({
         reqQuery: {},
       });
 
       MockPhotoService.getPhotos.mockResolvedValue({
-        photos: mockPhotos as (mongoose.Document<unknown, IPhoto> &
-          IPhoto & {
-            _id: mongoose.Types.ObjectId;
-          })[],
+        photos: mockPhotos,
         pagination: mockPagination,
       });
 
@@ -224,8 +217,9 @@ describe("Photo Controller", () => {
       expect(MockPhotoService.getPhotos).toHaveBeenCalledWith(undefined, {
         page: 1,
         limit: 12,
-        skip: 10,
+        skip: 0,
       });
+
       expect(res.json).toHaveBeenCalledWith({
         status: "success",
         data: mockPhotos,
@@ -235,14 +229,12 @@ describe("Photo Controller", () => {
 
     it("should get photos with specified category and pagination", async () => {
       const mockPhotos = [createPhotoDocument()];
-      const mockPagination = {
-        total: 1,
-        totalPages: 1,
+
+      const mockPagination = createPaginationFixture({
         currentPage: 2,
-        itemsPerPage: 10,
-        hasNextPage: false,
+        itemsPerPage: 12,
         hasPrevPage: true,
-      };
+      });
 
       const category = photoCategories[0];
       const { req, res } = setupControllerTest({
@@ -250,7 +242,7 @@ describe("Photo Controller", () => {
       });
 
       MockPhotoService.getPhotos.mockResolvedValue({
-        photos: mockPhotos as PhotoDocumentFixture[],
+        photos: mockPhotos,
         pagination: mockPagination,
       });
 
@@ -261,6 +253,7 @@ describe("Photo Controller", () => {
         limit: 10,
         skip: 10,
       });
+
       expect(res.json).toHaveBeenCalledWith({
         status: "success",
         data: mockPhotos,
@@ -270,6 +263,7 @@ describe("Photo Controller", () => {
 
     it("should handle invalid page/limit parameters by using defaults", async () => {
       const mockPhotos = [createPhotoDocument()];
+
       const mockPagination = createPaginationFixture();
 
       const { req, res } = setupControllerTest({
@@ -277,7 +271,7 @@ describe("Photo Controller", () => {
       });
 
       MockPhotoService.getPhotos.mockResolvedValue({
-        photos: mockPhotos as PhotoDocumentFixture[],
+        photos: mockPhotos,
         pagination: mockPagination,
       });
 
@@ -286,7 +280,7 @@ describe("Photo Controller", () => {
       expect(MockPhotoService.getPhotos).toHaveBeenCalledWith(undefined, {
         page: 1,
         limit: 12,
-        skip: 10,
+        skip: 0,
       });
     });
   });

@@ -1,96 +1,61 @@
-import { Request, Response } from "express";
-
 import { HTTP_STATUS } from "../../../constants";
 import bookingController from "../../../controllers/booking.controller";
 import BookingService from "../../../services/booking.service";
+import { completeBookingData, requiredBookingData } from "../../fixtures";
+import { setupControllerTest } from "../../utils";
 
 jest.mock("../../../services/booking.service");
 const MockBookingService = BookingService as jest.Mocked<typeof BookingService>;
 
 describe("Booking Controller", () => {
-  let mockRequest: Partial<Request>;
-  let mockResponse: Partial<Response>;
-  let mockJson: jest.Mock;
-  let mockStatus: jest.Mock;
-
   beforeEach(() => {
     jest.clearAllMocks();
-
-    mockJson = jest.fn();
-    mockStatus = jest.fn(() => ({ json: mockJson }));
-
-    mockRequest = {
-      body: {},
-    };
-
-    mockResponse = {
-      json: mockJson,
-      status: mockStatus,
-    };
   });
 
   describe("createBooking", () => {
-    it("should create booking successfully", async () => {
-      mockRequest.body = {
-        name: "Joe Doe",
-        contact: "+380501234567",
-        sessionType: "individual",
-      };
+    it("should create booking successfully and return 201 status", async () => {
+      const { req, res } = setupControllerTest({
+        reqBody: requiredBookingData,
+      });
 
       MockBookingService.createBooking.mockResolvedValue(true);
 
-      await bookingController.createBooking(mockRequest as Request, mockResponse as Response);
+      await bookingController.createBooking(req, res);
 
-      expect(MockBookingService.createBooking).toHaveBeenCalledWith({
-        name: "Joe Doe",
-        contact: "+380501234567",
-        sessionType: "individual",
-      });
+      expect(MockBookingService.createBooking).toHaveBeenCalledWith(requiredBookingData);
 
-      expect(mockStatus).toHaveBeenCalledWith(HTTP_STATUS.CREATED);
+      expect(res.status).toHaveBeenCalledWith(HTTP_STATUS.CREATED);
 
-      expect(mockJson).toHaveBeenCalledWith({
+      expect(res.json).toHaveBeenCalledWith({
         status: "success",
         message: "Запит на фотосесію успішно надіслано. Ми зв'яжемося з вами найближчим часом!",
       });
     });
 
     it("should throw CustomError when service returns false", async () => {
-      mockRequest.body = {
-        name: "Joe Doe",
-        contact: "+380501234567",
-        sessionType: "individual",
-      };
+      const { req, res } = setupControllerTest({
+        reqBody: requiredBookingData,
+      });
 
       MockBookingService.createBooking.mockResolvedValue(false);
 
-      await expect(
-        bookingController.createBooking(mockRequest as Request, mockResponse as Response),
-      ).rejects.toThrow("Сталася помилка. Будь ласка, спробуйте ще раз");
+      await expect(bookingController.createBooking(req, res)).rejects.toThrow(
+        "Сталася помилка. Будь ласка, спробуйте ще раз",
+      );
     });
 
     it("should handle optional fields", async () => {
-      mockRequest.body = {
-        name: "Joe Doe",
-        contact: "@instagram_user",
-        sessionType: "love-story",
-        comment: "Some comment",
-        sessionDate: "2024-12-25",
-      };
+      const { req, res } = setupControllerTest({
+        reqBody: completeBookingData,
+      });
 
       MockBookingService.createBooking.mockResolvedValue(true);
 
-      await bookingController.createBooking(mockRequest as Request, mockResponse as Response);
+      await bookingController.createBooking(req, res);
 
-      expect(mockStatus).toHaveBeenCalledWith(HTTP_STATUS.CREATED);
+      expect(res.status).toHaveBeenCalledWith(HTTP_STATUS.CREATED);
 
-      expect(MockBookingService.createBooking).toHaveBeenCalledWith({
-        name: "Joe Doe",
-        contact: "@instagram_user",
-        sessionType: "love-story",
-        comment: "Some comment",
-        sessionDate: "2024-12-25",
-      });
+      expect(MockBookingService.createBooking).toHaveBeenCalledWith(completeBookingData);
     });
   });
 });

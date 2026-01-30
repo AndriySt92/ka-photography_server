@@ -8,4 +8,4 @@ export {
   PhotoDocumentFixture,
   PhotoUploadFixture,
 } from "./photo.fixture";
-export { adminCredentials, createTestAdmin, TestAdmin } from "./user.fixtures";
+export { adminCredentials, createTestAdmin } from "./user.fixtures";

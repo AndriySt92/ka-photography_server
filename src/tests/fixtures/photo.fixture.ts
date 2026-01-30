@@ -60,7 +60,7 @@ export const createPaginationFixture = (
   total: 1,
   totalPages: 1,
   currentPage: 1,
-  itemsPerPage: 10,
+  itemsPerPage: 12,
   hasNextPage: false,
   hasPrevPage: false,
   ...overrides,

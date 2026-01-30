@@ -1,11 +1,9 @@
 import mongoose from "mongoose";
 
-export interface TestAdmin {
-  _id: mongoose.Types.ObjectId;
-  email: string;
-  role: "admin" | "user";
-  username: string;
-  password: string;
+import { Admin } from "../../types";
+
+export interface TestAdmin extends Admin {
+  password?: string;
 }
 
 export const createTestAdmin = (overrides: Partial<TestAdmin> = {}): TestAdmin => ({

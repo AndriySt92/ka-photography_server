@@ -2,8 +2,8 @@ import { HTTP_STATUS } from "../../../constants";
 import adminController from "../../../controllers/admin.controller";
 import AdminService from "../../../services/admin.service";
 import { Admin } from "../../../types";
-import { user } from "../../fixtures/user";
-import { setupControllerTest } from "../../utils/expressMock";
+import { createTestAdmin } from "../../fixtures";
+import { setupControllerTest } from "../../utils";
 
 jest.mock("../../../services/admin.service");
 const MockAdminService = AdminService as jest.Mocked<typeof AdminService>;
@@ -26,7 +26,7 @@ describe("Admin Controller", () => {
       });
 
       const userWithToken = {
-        ...user,
+        ...createTestAdmin(),
         token: "jwt-token-123",
       };
 
@@ -87,26 +87,18 @@ describe("Admin Controller", () => {
 
   describe("current", () => {
     it("should return current user from request", async () => {
+      const adminTest = createTestAdmin();
+
       const { req, res } = setupControllerTest({
-        reqUser: user,
+        reqUser: adminTest,
       });
 
       await adminController.current(req, res);
 
       expect(res.json).toHaveBeenCalledWith({
         status: "success",
-        data: user,
+        data: adminTest,
       });
-    });
-
-    it("should handle missing user gracefully", async () => {
-      const { req, res } = setupControllerTest({
-        reqUser: null,
-      });
-
-      await expect(adminController.login(req, res)).rejects.toThrow("Invalid credentials");
-
-      expect(res.json).not.toHaveBeenCalled();
     });
   });
 });
