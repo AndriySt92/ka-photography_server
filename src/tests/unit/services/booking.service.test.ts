@@ -1,7 +1,7 @@
 import BookingService from "../../../services/booking.service";
 import { SessionType } from "../../../types";
 import { sendEmail } from "../../../utils";
-import { completeBookingData, requiredBookingData } from "../../fixtures/bookingData";
+import { completeBookingData, requiredBookingData } from "../../fixtures";
 
 jest.mock("../../../utils", () => ({
   sendEmail: jest.fn(),

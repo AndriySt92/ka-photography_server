@@ -1,7 +1,10 @@
+import mongoose from "mongoose";
+
 import cloudinary from "../../../config/cloudinary";
 import { HTTP_STATUS } from "../../../constants";
 import Photos from "../../../models/photo.model";
 import PhotoService from "../../../services/photo.service";
+import { createPhotoDocument } from "../../fixtures";
 
 jest.mock("../../../models/photo.model");
 jest.mock("../../../config/cloudinary");
@@ -36,6 +39,7 @@ interface TestPhotoDocument {
 interface PageOptions {
   page: number;
   limit: number;
+  skip: number;
 }
 
 describe("Photo Service", () => {
@@ -71,7 +75,7 @@ describe("Photo Service", () => {
 
   describe("getPhotos", () => {
     it("should return paginated photos without category filter", async () => {
-      const pageOptions: PageOptions = { page: 1, limit: 2 };
+      const pageOptions: PageOptions = { page: 1, limit: 2, skip: 0 };
       const photosArray: TestPhotoDocument[] = [
         { _id: "1", photoUrl: "a" },
         { _id: "2", photoUrl: "b" },
@@ -101,7 +105,7 @@ describe("Photo Service", () => {
     });
 
     it("should apply category filter when provided", async () => {
-      const pageOptions: PageOptions = { page: 2, limit: 2 };
+      const pageOptions: PageOptions = { page: 2, limit: 2, skip: 0 };
       const category = "nature";
       const photosArray: TestPhotoDocument[] = [{ _id: "3", photoUrl: "c" }];
       const total = 3;
@@ -135,21 +139,32 @@ describe("Photo Service", () => {
     it("should throw CustomError when photo not found", async () => {
       MockPhotos.findById.mockResolvedValue(null);
 
-      await expect(PhotoService.deletePhoto("nonexistent")).rejects.toMatchObject({
+      const nonExistentId = new mongoose.Types.ObjectId().toString();
+
+      await expect(PhotoService.deletePhoto(nonExistentId)).rejects.toMatchObject({
         message: "Фото не знайдено",
         status: HTTP_STATUS.NOT_FOUND,
       });
 
-      expect(MockPhotos.findById).toHaveBeenCalledWith("nonexistent");
+      expect(MockPhotos.findById).toHaveBeenCalledWith(nonExistentId);
     });
 
-    it("should destroy cloudinary resource and delete document if publicId exists", async () => {
-      const photoId = "photo1";
-      const publicId = "cloud_pub_1";
+    it("should throw CustomError when invalid photoId format", async () => {
+      await expect(PhotoService.deletePhoto("invalid-format")).rejects.toMatchObject({
+        message: "Фото не знайдено",
+        status: HTTP_STATUS.NOT_FOUND,
+      });
+
+      // Verify findById is not called when validation fails
+      expect(MockPhotos.findById).not.toHaveBeenCalled();
+    });
+
+    it("should delete from Cloudinary and database when photo has publicId", async () => {
+      const photoId = new mongoose.Types.ObjectId().toString();
+      const publicId = "cloudinary-public-id-123";
 
       const photoDoc = {
-        _id: photoId,
-        publicId,
+        ...createPhotoDocument({ _id: new mongoose.Types.ObjectId(photoId), publicId }),
         deleteOne: jest.fn().mockResolvedValue({}),
       };
 
@@ -163,12 +178,12 @@ describe("Photo Service", () => {
       expect(photoDoc.deleteOne).toHaveBeenCalled();
     });
 
-    it("should only delete document when no publicId", async () => {
-      const photoId = "photo2";
+    it("should only delete from database when photo has no publicId", async () => {
+      const photoId = new mongoose.Types.ObjectId().toString();
 
       const photoDoc = {
-        _id: photoId,
-        publicId: "",
+        ...createPhotoDocument({ _id: new mongoose.Types.ObjectId(photoId) }),
+        publicId: "", // Empty string
         deleteOne: jest.fn().mockResolvedValue({}),
       };
 
@@ -181,24 +196,42 @@ describe("Photo Service", () => {
       expect(photoDoc.deleteOne).toHaveBeenCalled();
     });
 
-    it("should handle case where deleteOne method exists", async () => {
-      const photoId = "photo3";
-      const publicId = "cloud_pub_3";
+    it("should only delete from database when photo has undefined publicId", async () => {
+      const photoId = new mongoose.Types.ObjectId().toString();
 
       const photoDoc = {
-        _id: photoId,
-        publicId,
+        ...createPhotoDocument({ _id: new mongoose.Types.ObjectId(photoId) }),
+        publicId: undefined, // Undefined
         deleteOne: jest.fn().mockResolvedValue({}),
       };
 
       MockPhotos.findById.mockResolvedValue(photoDoc);
-      mockCloudinary.uploader.destroy.mockResolvedValue({ result: "ok" });
 
       await PhotoService.deletePhoto(photoId);
 
       expect(MockPhotos.findById).toHaveBeenCalledWith(photoId);
-      expect(mockCloudinary.uploader.destroy).toHaveBeenCalledWith(publicId);
+      expect(mockCloudinary.uploader.destroy).not.toHaveBeenCalled();
       expect(photoDoc.deleteOne).toHaveBeenCalled();
+    });
+
+    it("should propagate Cloudinary errors if deletion fails", async () => {
+      const photoId = new mongoose.Types.ObjectId().toString();
+      const publicId = "cloudinary-error-id";
+
+      const photoDoc = {
+        ...createPhotoDocument({ _id: new mongoose.Types.ObjectId(photoId), publicId }),
+        deleteOne: jest.fn().mockResolvedValue({}),
+      };
+
+      MockPhotos.findById.mockResolvedValue(photoDoc);
+      const cloudinaryError = new Error("Cloudinary API error");
+      mockCloudinary.uploader.destroy.mockRejectedValue(cloudinaryError);
+
+      await expect(PhotoService.deletePhoto(photoId)).rejects.toThrow(cloudinaryError);
+
+      expect(MockPhotos.findById).toHaveBeenCalledWith(photoId);
+      expect(mockCloudinary.uploader.destroy).toHaveBeenCalledWith(publicId);
+      expect(photoDoc.deleteOne).not.toHaveBeenCalled(); // Should not delete from DB if Cloudinary fails
     });
   });
 });

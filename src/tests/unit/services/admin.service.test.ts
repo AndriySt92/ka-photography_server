@@ -5,7 +5,7 @@ import { LoginData } from "../../../dto";
 import Admin from "../../../models/admin.model";
 import AdminService from "../../../services/admin.service";
 import generateTokenAndSetCookie from "../../../utils/generateTokenAndSetCookie";
-import { user } from "../../fixtures/user";
+import { createTestAdmin } from "../../fixtures";
 
 jest.mock("bcryptjs");
 jest.mock("../../../models/admin.model");
@@ -40,9 +40,10 @@ describe("Admin Service - login", () => {
   });
 
   it("should throw CustomError when password is incorrect", async () => {
+    const adminTest = createTestAdmin();
     const foundUser = {
-      ...user,
-      toObject: () => user,
+      ...adminTest,
+      toObject: () => adminTest,
     };
 
     mockAdminFindOne.mockResolvedValue(foundUser);
@@ -78,7 +79,7 @@ describe("Admin Service - login", () => {
 
   it("should generate token, set cookie and return user without password on successful login", async () => {
     const mockAdmin = {
-      ...user,
+      ...createTestAdmin(),
       toObject: function () {
         const { password: _password, ...rest } = this;
         return rest;
@@ -97,7 +98,10 @@ describe("Admin Service - login", () => {
 
     expect(mockAdminFindOne).toHaveBeenCalledWith({ email: loginData.email });
     expect(mockBcryptCompare).toHaveBeenCalledWith(loginData.password, mockAdmin.password);
-    expect(mockGenerateToken).toHaveBeenCalledWith({ userId: mockAdmin._id, res: mockRes });
+    expect(mockGenerateToken).toHaveBeenCalledWith({
+      userId: mockAdmin._id.toString(),
+      res: mockRes,
+    });
 
     expect(result).not.toHaveProperty("password");
     expect(result._id).toBe(mockAdmin._id);

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-import { TestAdmin } from "../fixtures";
+import { TestAdmin } from "../fixtures/user.fixtures";
 
 type AnyObject = Record<string, unknown>;
 type Params = Record<string, string>;
@@ -14,7 +14,7 @@ export const mockRequest = (overrides: Partial<Request> = {}): Partial<Request> 
   headers: {},
   cookies: {},
   signedCookies: {},
-  user: null,
+  user: undefined,
   ...overrides,
 });
 
@@ -36,7 +36,7 @@ export interface ExpressTestSetupOptions {
   reqBody?: AnyObject;
   reqParams?: Params;
   reqQuery?: Query;
-  reqUser?: TestAdmin | null;
+  reqUser?: TestAdmin | undefined;
   reqHeaders?: Headers;
   reqCookies?: Record<string, string>;
   reqFile?: Express.Multer.File;
@@ -54,7 +54,7 @@ export const setupExpressTest = ({
   reqBody = {},
   reqParams = {},
   reqQuery = {},
-  reqUser = null,
+  reqUser = undefined,
   reqHeaders = {},
   reqCookies = {},
   reqFile = undefined,
