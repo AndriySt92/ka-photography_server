@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import auth from "../../../middlewares/auth.middleware";
 import Admin from "../../../models/admin.model";
 import CustomError from "../../../utils/customError";
-import { user } from "../../fixtures/user";
+import { createTestAdmin } from "../../fixtures";
 import { setupMiddlewareTest } from "../../utils/expressMock";
 
 jest.mock("../../../models/admin.model");
@@ -18,7 +18,7 @@ describe("Auth Middleware", () => {
 
   describe("Successful authentication", () => {
     it("should set req.user when valid token is provided", async () => {
-      const mockUser = user;
+      const mockUser = createTestAdmin();
 
       const mockToken = "valid.jwt.token";
       const mockDecoded = { userId: mockUser._id };
@@ -127,7 +127,7 @@ describe("Auth Middleware", () => {
     it("should verify token with correct secret key", async () => {
       const mockToken = "valid.jwt.token";
       const mockDecoded = { userId: "userid" };
-      const mockUser = user;
+      const mockUser = createTestAdmin();
 
       const { req, res, next } = setupMiddlewareTest({
         reqCookies: { auth_token: "valid.jwt.token" },

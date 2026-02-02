@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { HTTP_STATUS } from "../constants";
 
 const createErrorResponse = (
-  message = "An error ogcured",
+  message = "An error occurred",
   status = HTTP_STATUS.INTERNAL_SERVER_ERROR,
 ) => ({ status, message });
 

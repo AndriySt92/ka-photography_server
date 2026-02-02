@@ -1,8 +1,8 @@
 import { HTTP_STATUS } from "../../../constants";
 import { validateBooking } from "../../../middlewares/validateContactForm.middleware";
 import CustomError from "../../../utils/customError";
-import { completeBookingData, requiredBookingData } from "../../fixtures/bookingData";
-import { setupMiddlewareTest } from "../../utils/expressMock";
+import { completeBookingData, requiredBookingData } from "../../fixtures";
+import { setupMiddlewareTest } from "../../utils";
 
 describe("validateBooking Middleware", () => {
   beforeEach(() => {});

@@ -13,7 +13,7 @@ const COMMENT_MAX = 500;
 
 // Contact validation patterns
 const UA_PHONE_REGEX = /^(?:\+?380|0)\d{9}$/;
-const INSTAGRAM_REGEX = /^@?[A-Za-z0-9_](?:[A-Za-z0-9_.]{0,28}[A-Za-z0-9_])?$/;
+const INSTAGRAM_REGEX = /^@?[A-Za-z0-9_](?!.*\.\.)(?!.*\.$)[A-Za-z0-9_.]{0,28}[A-Za-z0-9_]$/;
 
 // Photo session types
 const SESSION_TYPES = ["individual", "group", "express", "love-story"] as const;
