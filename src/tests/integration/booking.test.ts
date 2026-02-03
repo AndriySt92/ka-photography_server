@@ -3,7 +3,7 @@ import request from "supertest";
 import app from "../../app";
 import { HTTP_STATUS } from "../../constants";
 import BookingService from "../../services/booking.service";
-import { requiredBookingData } from "../fixtures/bookingData";
+import { requiredBookingData } from "../fixtures";
 
 jest.mock("../../utils/sendEmail", () => ({
   sendEmail: jest.fn().mockResolvedValue(true),

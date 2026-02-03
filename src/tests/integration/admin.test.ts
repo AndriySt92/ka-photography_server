@@ -2,20 +2,10 @@ import { OutgoingHttpHeaders } from "http2";
 import request from "supertest";
 
 import app from "../../../src/app";
-import Admin from "../../../src/models/admin.model";
 import { HTTP_STATUS } from "../../constants";
-import { clearDatabase, closeDatabase, connect } from "../setup/mongodb";
-
-const createTestAdmin = async () => {
-  const admin = new Admin({
-    username: "testadmin",
-    email: "admin@example.com",
-    password: "password123",
-    role: "admin",
-  });
-
-  return await admin.save();
-};
+import { adminCredentials } from "../fixtures";
+import { clearDatabase, closeDatabase, connect } from "../setup";
+import { createTestAdmin } from "../utils";
 
 const getCookiesFromHeader = (headers: OutgoingHttpHeaders): string[] => {
   const cookies = headers["set-cookie"];
@@ -40,23 +30,18 @@ describe("Admin API Integration Tests", () => {
 
   describe("POST /api/admin/login", () => {
     it("should login admin successfully and return user data without password", async () => {
-      await createTestAdmin();
-
-      const loginData = {
-        email: "admin@example.com",
-        password: "password123",
-      };
+      const adminTest = await createTestAdmin();
 
       const response = await request(app)
         .post("/api/admin/login")
-        .send(loginData)
+        .send(adminCredentials)
         .expect("Content-Type", /json/)
         .expect(HTTP_STATUS.OK);
 
       expect(response.body).toHaveProperty("status", "success");
       expect(response.body).toHaveProperty("data");
-      expect(response.body.data).toHaveProperty("email", "admin@example.com");
-      expect(response.body.data).toHaveProperty("username", "testadmin");
+      expect(response.body.data).toHaveProperty("email", adminTest.email);
+      expect(response.body.data).toHaveProperty("username", adminTest.username);
       expect(response.body.data).not.toHaveProperty("password");
 
       const cookies = getCookiesFromHeader(response.headers);
@@ -68,7 +53,7 @@ describe("Admin API Integration Tests", () => {
       await createTestAdmin();
 
       const invalidLoginData = {
-        email: "admin@example.com",
+        ...adminCredentials,
         password: "wrongpassword",
       };
 
@@ -84,8 +69,8 @@ describe("Admin API Integration Tests", () => {
 
     it("should return 400 when admin does not exist", async () => {
       const nonExistentAdmin = {
+        ...adminCredentials,
         email: "nonexistent@example.com",
-        password: "password123",
       };
 
       const response = await request(app)
@@ -113,10 +98,7 @@ describe("Admin API Integration Tests", () => {
     it("should logout successfully when authenticated", async () => {
       await createTestAdmin();
 
-      const loginResponse = await request(app).post("/api/admin/login").send({
-        email: "admin@example.com",
-        password: "password123",
-      });
+      const loginResponse = await request(app).post("/api/admin/login").send(adminCredentials);
 
       const cookies = getCookiesFromHeader(loginResponse.headers);
 
@@ -144,12 +126,9 @@ describe("Admin API Integration Tests", () => {
 
   describe("GET /api/admin/current", () => {
     it("should return current admin data when authenticated", async () => {
-      await createTestAdmin();
+      const adminTest = await createTestAdmin();
 
-      const loginResponse = await request(app).post("/api/admin/login").send({
-        email: "admin@example.com",
-        password: "password123",
-      });
+      const loginResponse = await request(app).post("/api/admin/login").send(adminCredentials);
 
       const cookies = getCookiesFromHeader(loginResponse.headers);
 
@@ -162,8 +141,8 @@ describe("Admin API Integration Tests", () => {
       expect(currentResponse.status).toBe(HTTP_STATUS.OK);
       expect(currentResponse.body).toHaveProperty("status", "success");
       expect(currentResponse.body).toHaveProperty("data");
-      expect(currentResponse.body.data).toHaveProperty("email", "admin@example.com");
-      expect(currentResponse.body.data).toHaveProperty("username", "testadmin");
+      expect(currentResponse.body.data).toHaveProperty("email", adminTest.email);
+      expect(currentResponse.body.data).toHaveProperty("username", adminTest.username);
       expect(currentResponse.body.data).not.toHaveProperty("password");
     });
 
@@ -179,10 +158,7 @@ describe("Admin API Integration Tests", () => {
     it("should maintain session across multiple requests", async () => {
       await createTestAdmin();
 
-      const loginResponse = await request(app).post("/api/admin/login").send({
-        email: "admin@example.com",
-        password: "password123",
-      });
+      const loginResponse = await request(app).post("/api/admin/login").send(adminCredentials);
 
       const cookies = getCookiesFromHeader(loginResponse.headers);
 
