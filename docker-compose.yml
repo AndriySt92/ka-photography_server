@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ka-photographer-backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:7
+    container_name: ka-photographer-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+
+# version: '3.8'
+
+# services:
+#   backend:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     container_name: ka-photographer-backend
+#     ports:
+#       - "5000:5000"
+#     env_file:
+#       - .env
+#     depends_on:
+#       - mongodb
+#     restart: unless-stopped
+#     environment:
+#       # Формуємо URI підключення до MongoDB з автентифікацією
+#       MONGO_DB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DB}?authSource=admin
+
+#   mongodb:
+#     image: mongo:7
+#     container_name: ka-photographer-mongodb
+#     ports:
+#       - "27017:27017"
+#     volumes:
+#       - mongodb_data:/data/db
+#     restart: unless-stopped
+#     environment:
+#       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+#       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+#       MONGO_INITDB_DATABASE: ${MONGO_DB}
+
+# volumes:
+#   mongodb_data:

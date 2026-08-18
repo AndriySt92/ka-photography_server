@@ -24,7 +24,7 @@ const getPhotos = async (category, pageOptions: { page: number; limit: number; s
   const query = category && category !== "" ? { categories: { $in: [category] } } : {};
 
   const [photos, total] = await Promise.all([
-    Photos.find(query).sort("-createdAt").skip(skip).limit(limit),
+    Photos.find(query).sort("-createdAt -_id").skip(skip).limit(limit),
     Photos.countDocuments(query),
   ]);
 
