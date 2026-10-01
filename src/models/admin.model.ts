@@ -3,6 +3,13 @@ import mongoose from "mongoose";
 
 import { Admin } from "../types/admin.interface";
 
+export interface AdminDocument extends Omit<Admin, "_id">, Document {
+  password: string;
+  createdAt: Date;
+  updatedAt: Date;
+  isValidPassword(password: string): Promise<boolean>;
+}
+
 const adminSchema = new mongoose.Schema({
   username: {
     type: String,
@@ -40,6 +47,6 @@ adminSchema.methods.isValidPassword = async function (password: string): Promise
   return bcrypt.compare(password, this.password);
 };
 
-const Admin = mongoose.model<Admin>("Admin", adminSchema);
+const Admin = mongoose.model<AdminDocument>("Admin", adminSchema);
 
 export default Admin;

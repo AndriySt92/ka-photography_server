@@ -20,11 +20,11 @@ const login = async (loginData: LoginData, res: Response): Promise<AdminType> =>
     throw new CustomError("Неправильний пароль або логін", HTTP_STATUS.BAD_REQUEST);
   }
 
-  generateTokenAndSetCookie({ userId: user._id, res });
+  generateTokenAndSetCookie({ userId: user._id.toString(), res });
   // Exclude the password from the user object before returning
   const { password: _password, ...userWithoutPassword } = user.toObject();
 
-  return userWithoutPassword as Admin;
+  return userWithoutPassword;
 };
 
 export default {

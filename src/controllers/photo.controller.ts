@@ -3,10 +3,7 @@ import { Request, Response } from "express";
 import { HTTP_STATUS } from "../constants";
 import { AddPhotoRequestDto } from "../dto";
 import PhotoService from "../services/photo.service";
-import { CustomError } from "../utils";
-
-const PAGE = 1;
-const LIMIT = 12;
+import { CustomError, getPaginationParams } from "../utils";
 
 const addPhoto = async (req: Request, res: Response): Promise<void> => {
   const { categories, photos }: AddPhotoRequestDto = req.body;
@@ -42,12 +39,12 @@ const addPhoto = async (req: Request, res: Response): Promise<void> => {
 
 const getPhotos = async (req: Request, res: Response): Promise<void> => {
   const category = (req.query.category as string) || undefined;
-  const page = parseInt(req.query.page as string) || PAGE;
-  const limit = parseInt(req.query.limit as string) || LIMIT;
+  const { page, limit, skip } = getPaginationParams(req);
 
   const { photos, pagination } = await PhotoService.getPhotos(category, {
     page,
     limit,
+    skip,
   });
 
   res.json({

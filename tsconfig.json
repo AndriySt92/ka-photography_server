@@ -9,8 +9,9 @@
       "skipLibCheck": true,
       "forceConsistentCasingInFileNames": true,
       "noImplicitAny": false,
-      "typeRoots": ["./src/types"]
+      "resolveJsonModule": true
     },
     "include": ["src/**/*"],
-    "exclude": ["node_modules"]
+    "exclude": ["node_modules"],
+    "files":["src/types/express/index.d.ts"]
   }

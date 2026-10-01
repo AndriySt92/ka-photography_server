@@ -1,8 +1,8 @@
-import { Document } from "mongoose";
+import mongoose from "mongoose";
 
-export interface Admin extends Document {
+export interface Admin {
+  _id: mongoose.Types.ObjectId;
   email: string;
-  password: string;
   role: "admin";
   username: string;
 }

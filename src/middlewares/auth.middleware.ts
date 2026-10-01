@@ -3,18 +3,10 @@ import jwt from "jsonwebtoken";
 
 import { HTTP_STATUS } from "../constants";
 import Admin from "../models/admin.model";
-import { Admin as AdminType, DecodedToken } from "../types";
+import { DecodedToken } from "../types";
 import { CustomError } from "../utils";
 
-interface AuthenticatedRequest extends Request {
-  user: AdminType;
-}
-
-const auth = async (
-  req: AuthenticatedRequest,
-  _res: Response,
-  next: NextFunction,
-): Promise<void> => {
+const auth = async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
   try {
     const token = req.cookies["auth_token"];
 

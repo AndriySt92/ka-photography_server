@@ -22,7 +22,7 @@ const createBooking = async (req: Request, res: Response) => {
     );
   }
 
-  res.json({
+  res.status(HTTP_STATUS.CREATED).json({
     status: "success",
     message: "Запит на фотосесію успішно надіслано. Ми зв'яжемося з вами найближчим часом!",
   });

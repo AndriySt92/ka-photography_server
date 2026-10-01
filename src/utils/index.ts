@@ -3,5 +3,6 @@ export { default as CustomError } from "./customError";
 export { default as generateTokenAndSetCookie } from "./generateTokenAndSetCookie";
 export { default as getCookieOptions } from "./getCookieOptions";
 export { default as getErrorResponse } from "./getErrorResponse";
+export { createPaginationResponse, getPaginationParams } from "./pagination";
 export { default as rateLimiter } from "./rateLimiter";
 export { default as sendEmail } from "./sendEmail";

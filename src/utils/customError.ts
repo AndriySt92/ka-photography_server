@@ -4,8 +4,9 @@ class CustomError extends Error {
   constructor(message: string, status: number) {
     super(message);
     this.status = status;
-    // Shows "CustomError" instead of just "Error"
     this.name = this.constructor.name;
+
+    Object.setPrototypeOf(this, CustomError.prototype);
   }
 }
 
